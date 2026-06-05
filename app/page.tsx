@@ -116,7 +116,7 @@ export default async function HomePage() {
                     className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
                   >
                     <ArrowRight className="h-4 w-4" />
-                    Đi tới 7 bài tập
+                    Đi tới 6 bài tập
                   </Link>
                   <Link
                     href="/tongket"
