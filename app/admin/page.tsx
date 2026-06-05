@@ -237,7 +237,7 @@ export default function AdminPage() {
     <>
       <Navbar />
       {!unlocked ? (
-        <main className="flex min-h-screen items-center justify-center px-4 py-12">
+        <main className="flex min-h-screen items-center justify-center px-4 pb-12 pt-24 sm:pt-28 bg-slate-50/50">
           <section className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white/95 p-6 shadow-glass backdrop-blur-xl sm:p-8">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-900">
@@ -284,7 +284,12 @@ export default function AdminPage() {
           </section>
         </main>
       ) : (
-      <main className="min-h-screen px-4 pb-16 pt-8">
+      /* 
+        ĐÃ THAY ĐỔI TẠI ĐÂY:
+        - Sử dụng 'fixed inset-0 w-screen h-screen' kết hợp với 'overflow-y-auto' và 'z-0'.
+        - Ép trang tạo ra một viewport cuộn độc lập cho riêng admin, bỏ qua mọi thuộc tính lock scroll bên ngoài layout tổng.
+      */
+      <main className="fixed inset-0 h-screen w-screen px-4 pb-16 pt-24 sm:pt-28 bg-slate-50/50 overflow-y-auto z-0">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
           <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-glass backdrop-blur-xl sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">

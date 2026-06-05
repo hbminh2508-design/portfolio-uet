@@ -6,10 +6,9 @@ export default function SummaryPage() {
   return (
     <>
       <Navbar />
-      {/* Đã tăng pt-2 sm:pt-4 lên pt-24 sm:pt-28 giống trang bài tập để tránh bị vướng vào navbar */}
-      <main className="min-h-screen px-4 pb-12 pt-24 sm:pt-28 bg-slate-50/50">
+      {/* Đã giảm pt-24 sm:pt-28 xuống pt-16 sm:pt-20 để đẩy toàn bộ hộp nội dung lên cao hơn một chút */}
+      <main className="min-h-screen px-4 pb-12 pt-16 sm:pt-20 bg-slate-50/50">
         <div className="mx-auto w-full max-w-5xl">
-          {/* Loại bỏ md:max-h để khối nội dung không bị giới hạn chiều cao gây đứt gãy layout */}
           <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-glass">
             <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-4 py-4 sm:px-5">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Trang tổng kết</p>
@@ -22,7 +21,6 @@ export default function SummaryPage() {
             <div className="grid gap-3 px-4 py-4 sm:px-5 lg:grid-cols-3">
               <article className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 lg:col-span-2">
                 <h2 className="text-base font-bold text-slate-950 sm:text-lg">Kiến thức & Kỹ năng cốt lõi học được</h2>
-                {/* Thay đổi hiển thị dấu chấm tròn mặc định thành gạch ngang */}
                 <ul className="mt-2.5 space-y-2 text-sm leading-5 text-slate-600 list-none pl-0">
                   <li className="flex items-start gap-2">
                     <span className="text-slate-400 select-none">—</span>
@@ -60,7 +58,6 @@ export default function SummaryPage() {
 
               <article className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 lg:col-span-3">
                 <h2 className="text-base font-bold text-slate-950 sm:text-lg">Thách thức đã vượt qua</h2>
-                {/* Thay đổi hiển thị dấu chấm tròn mặc định thành gạch ngang */}
                 <ul className="mt-2.5 space-y-2 text-sm leading-5 text-slate-600 list-none pl-0">
                   <li className="flex items-start gap-2">
                     <span className="text-slate-400 select-none">—</span>
