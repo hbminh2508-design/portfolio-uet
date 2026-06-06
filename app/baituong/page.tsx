@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import AssignmentsViewer from "@/components/AssignmentsViewer";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Layers } from "lucide-react";
 
 type Assignment = {
   week_number: number;
@@ -11,7 +11,6 @@ type Assignment = {
   pdf_url: string | null;
 };
 
-// Đã đổi length từ 7 xuống 6 để bỏ tuần thứ 7 mặc định
 const defaultAssignments = Array.from({ length: 6 }, (_, index) => ({
   week_number: index + 1,
   title: `Bài tập tuần ${index + 1}`,
@@ -27,7 +26,6 @@ export default async function AssignmentsPage() {
     .select("*")
     .order("week_number", { ascending: true });
 
-  // Lọc dữ liệu từ Supabase để chỉ lấy các tuần từ 1 đến 6
   const assignments = assignmentsData?.length 
     ? (assignmentsData as Assignment[]).filter(task => task.week_number <= 6) 
     : defaultAssignments;
@@ -35,50 +33,78 @@ export default async function AssignmentsPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 pb-12 pt-24 sm:pt-28 bg-slate-50/50">
-        <div className="mx-auto w-full max-w-5xl">
-          <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-glass md:max-h-[calc(100vh-12rem)]">
-            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white p-4 sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Bài tập</p>
-              
-              {/* Đã cập nhật tiêu đề thành 6 thẻ truy cập nhanh */}
-              <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-[2rem]">6 thẻ truy cập nhanh</h1>
-              
-              <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
-                Bấm vào từng thẻ để mở popup preview PDF.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-3">
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-transform hover:-translate-y-0.5 hover:border-sky-300 hover:text-slate-950"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  Về trang chủ
-                </Link>
-                <Link
-                  href="/tongket"
-                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  Đến trang tổng kết
-                </Link>
+      {/* TỐI ƯU: Thêm flex items-center justify-center và loại bỏ pt-24 để căn giữa tuyệt đối */}
+      <main className="fixed inset-0 h-screen w-screen px-4 pb-4 bg-[#f4f6f9] overflow-y-auto sm:overflow-hidden flex items-center justify-center z-0">
+        
+        {/* Nền lưới tọa độ Blueprint mờ mịn đồng bộ hệ thống */}
+        <div 
+          className="absolute inset-0 -z-10 pointer-events-none opacity-50" 
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: "40px 40px",
+          }}
+        />
+
+        {/* Khung điều phối vĩ mô khống chế max-w-4xl và giới hạn max-h thích ứng màn hình */}
+        <div className="w-full max-w-4xl h-auto max-h-[calc(100vh-6.5rem)] px-2 sm:px-4 flex flex-col justify-center animate-[contentLift_0.5s_cubic-bezier(0.16,1,0.3,1)_forwards] will-change-[transform,opacity]">
+          
+          {/* SIÊU PHẨM LIQUID GLASS CARD - Đồng bộ cấu trúc tráng gương cao cấp */}
+          <section className="rounded-[2.25rem] border border-white/90 bg-white/45 p-5 sm:p-6 lg:p-7 shadow-[0_30px_60px_rgba(15,23,42,0.04),inset_0_1px_2px_rgba(255,255,255,0.85)] backdrop-blur-3xl overflow-hidden relative">
+            
+            {/* Lớp phủ vệt sáng chéo phản quang bề mặt thủy tinh */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.12] pointer-events-none rounded-[2.25rem]" />
+
+            <div className="relative z-10">
+              {/* Header phân hệ tinh gọn bám sát chữ */}
+              <div className="border-b border-slate-200/60 pb-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/60 bg-sky-100/30 px-3 py-0.5 text-[11px] font-bold uppercase tracking-[0.2em] text-sky-700 backdrop-blur-md">
+                    <Layers className="h-3.5 w-3.5 text-sky-500" />
+                    Học phần số hóa
+                  </div>
+                  <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl leading-none">
+                    6 thẻ truy cập nhanh
+                  </h1>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Bấm trực tiếp vào từng phân hệ dưới đây để kích hoạt cửa sổ xem trước PDF trực tuyến.
+                  </p>
+                </div>
+                
+                {/* Cụm nút hướng tuyến tính */}
+                <div className="flex flex-wrap gap-2.5">
+                  <Link
+                    href="/"
+                    className="group inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-700 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950 shadow-sm"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    Về trang chủ
+                  </Link>
+                  <Link
+                    href="/tongket"
+                    className="group inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-600 shadow-sm"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    Đến trang tổng kết
+                  </Link>
+                </div>
+              </div>
+
+              {/* Vùng lưới hiển thị 6 bài tập */}
+              <div className="pt-4 overflow-y-auto max-h-[calc(100vh-18rem)] pr-1">
+                <AssignmentsViewer
+                  assignments={assignments.map((task) => ({
+                    week_number: task.week_number,
+                    title: task.title,
+                    description: task.description,
+                    pdf_url: task.pdf_url,
+                  }))}
+                />
               </div>
             </div>
 
-            <div className="p-4 sm:p-5">
-              <div className="mb-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                Bài tập từng tuần được chia ra các thẻ.
-              </div>
-
-              <AssignmentsViewer
-                assignments={assignments.map((task) => ({
-                  week_number: task.week_number,
-                  title: task.title,
-                  description: task.description,
-                  pdf_url: task.pdf_url,
-                }))}
-              />
-            </div>
           </section>
         </div>
       </main>

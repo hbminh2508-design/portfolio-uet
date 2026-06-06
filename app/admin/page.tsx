@@ -50,9 +50,7 @@ async function uploadAsset(file: File, filePath: string) {
     contentType: file.type,
   });
 
-  if (uploadError) {
-    throw uploadError;
-  }
+  if (uploadError) throw uploadError;
 
   const { data } = supabase.storage.from("portfolio-assets").getPublicUrl(filePath);
   return data.publicUrl;
@@ -72,12 +70,9 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    if (!unlocked) {
-      return;
-    }
+    if (!unlocked) return;
 
     let isMounted = true;
-
     async function loadData() {
       const [{ data: profileData, error: profileError }, { data: assignmentData, error: assignmentError }] =
         await Promise.all([
@@ -85,9 +80,7 @@ export default function AdminPage() {
           supabase.from("assignments").select("*").order("week_number", { ascending: true }),
         ]);
 
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
       if (profileError) {
         setMessage(`Không tải được hồ sơ: ${profileError.message}`);
@@ -109,37 +102,24 @@ export default function AdminPage() {
         setAssignments(
           emptyAssignments.map((fallback) => {
             const current = assignmentData.find((item) => item.week_number === fallback.week_number);
-            if (!current) {
-              return fallback;
-            }
-
-            return {
+            return current ? {
               week_number: current.week_number,
               title: current.title ?? "",
               description: current.description ?? "",
               pdf_url: current.pdf_url ?? "",
-            };
+            } : fallback;
           }),
         );
       }
-
-      if (assignmentError) {
-        setMessage(`Không tải được bài tập: ${assignmentError.message}`);
-      }
-
       setLoading(false);
     }
 
     loadData();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [unlocked]);
 
   function handleUnlock(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     if (accessCode.trim() === ACCESS_CODE) {
       setAuthError("");
       setUnlocked(true);
@@ -147,7 +127,6 @@ export default function AdminPage() {
       setLoading(true);
       return;
     }
-
     setAuthError("Mã đăng nhập không đúng.");
   }
 
@@ -156,7 +135,6 @@ export default function AdminPage() {
     setAuthError("");
     setUnlocked(false);
     setLoading(true);
-    setMessage("Đang tải dữ liệu từ Supabase...");
   }
 
   async function handleSaveAll() {
@@ -170,38 +148,30 @@ export default function AdminPage() {
       if (avatarFile) {
         avatarUrl = await uploadAsset(avatarFile, `profile/avatar.${avatarFile.name.split(".").pop() || "png"}`);
       }
-
       if (backgroundFile) {
         backgroundUrl = await uploadAsset(backgroundFile, `backgrounds/background.${backgroundFile.name.split(".").pop() || "png"}`);
       }
 
-      const { error: profileError } = await supabase.from("profiles").upsert(
-        {
-          id: profile.id,
-          full_name: profile.full_name,
-          student_id: profile.student_id,
-          class_name: profile.class_name,
-          course_name: profile.course_name,
-          intro_text: profile.intro_text,
-          avatar_url: avatarUrl,
-          background_url: backgroundUrl,
-        },
-        { onConflict: "id" },
-      );
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: profile.id,
+        full_name: profile.full_name,
+        student_id: profile.student_id,
+        class_name: profile.class_name,
+        course_name: profile.course_name,
+        intro_text: profile.intro_text,
+        avatar_url: avatarUrl,
+        background_url: backgroundUrl,
+      }, { onConflict: "id" });
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       const preparedAssignments = await Promise.all(
         assignments.map(async (item) => {
           const selectedFile = assignmentFiles[item.week_number];
           let pdfUrl = item.pdf_url;
-
           if (selectedFile) {
             pdfUrl = await uploadAsset(selectedFile, `assignments/week-${item.week_number}.pdf`);
           }
-
           return {
             week_number: item.week_number,
             title: item.title,
@@ -215,19 +185,16 @@ export default function AdminPage() {
         onConflict: "week_number",
       });
 
-      if (assignmentError) {
-        throw assignmentError;
-      }
+      if (assignmentError) throw assignmentError;
 
       setProfile({ ...profile, avatar_url: avatarUrl, background_url: backgroundUrl });
       setAssignments(preparedAssignments);
       setAvatarFile(null);
       setBackgroundFile(null);
       setAssignmentFiles({});
-      setMessage("Đã lưu xong hồ sơ và 7 bài tập.");
+      setMessage("Đã cập nhật thành công toàn bộ dữ liệu.");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Không thể lưu dữ liệu";
-      setMessage(errorMessage);
+      setMessage(error instanceof Error ? error.message : "Không thể lưu dữ liệu");
     } finally {
       setSaving(false);
     }
@@ -237,156 +204,154 @@ export default function AdminPage() {
     <>
       <Navbar />
       {!unlocked ? (
-        <main className="flex min-h-screen items-center justify-center px-4 pb-12 pt-24 sm:pt-28 bg-slate-50/50">
-          <section className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white/95 p-6 shadow-glass backdrop-blur-xl sm:p-8">
+        <main className="flex min-h-screen items-center justify-center px-4 pb-12 pt-24 bg-slate-50/50">
+          <section className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white/95 p-6 shadow-glass backdrop-blur-xl sm:p-8 transform transition-transform duration-500 scale-100">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-900">
                 <LockKeyhole className="h-6 w-6" />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Admin access</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Nhập mã để vào trang admin</h1>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Đăng nhập Quản trị</h1>
               </div>
             </div>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Mỗi lần mở <span className="font-semibold text-slate-900">/admin</span> sẽ cần nhập đúng mã <span className="font-semibold text-slate-900">@portfolio-uet</span> trước khi chỉnh sửa dữ liệu.
+              Nhập mã định danh hệ thống <span className="font-semibold text-slate-900">@portfolio-uet</span> để tiếp tục cấu hình dữ liệu đám mây.
             </p>
 
             <form className="mt-6 space-y-4" onSubmit={handleUnlock}>
               <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Mã đăng nhập</span>
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Mã bảo mật</span>
                 <input
                   autoFocus
                   value={accessCode}
                   onChange={(event) => setAccessCode(event.target.value)}
                   type="password"
-                  placeholder="Nhập mã @portfolio-uet"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none ring-0 focus:border-sky-400"
+                  placeholder="Nhập mã xác thực..."
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none ring-0 focus:border-sky-400 transition-all"
                 />
               </label>
 
-              {authError ? (
-                <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{authError}</p>
-              ) : null}
+              {authError && (
+                <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 animate-[shake_0.3s_ease-in-out]">{authError}</p>
+              )}
 
-              <div className="flex flex-wrap gap-3">
-                <button type="submit" className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5">
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 shadow-md">
                   <LockKeyhole className="h-4 w-4" />
-                  Mở khóa
+                  Xác thực
                 </button>
                 <button type="button" onClick={handleRetry} className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50">
                   <RotateCcw className="h-4 w-4" />
-                  Nhập lại
+                  Xóa nhập lại
                 </button>
               </div>
             </form>
           </section>
         </main>
       ) : (
-      /* 
-        ĐÃ THAY ĐỔI TẠI ĐÂY:
-        - Sử dụng 'fixed inset-0 w-screen h-screen' kết hợp với 'overflow-y-auto' và 'z-0'.
-        - Ép trang tạo ra một viewport cuộn độc lập cho riêng admin, bỏ qua mọi thuộc tính lock scroll bên ngoài layout tổng.
-      */
-      <main className="fixed inset-0 h-screen w-screen px-4 pb-16 pt-24 sm:pt-28 bg-slate-50/50 overflow-y-auto z-0">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-          <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-glass backdrop-blur-xl sm:p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Trang quản trị</p>
-                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Tải ảnh, nền và 7 bài tập lên Supabase</h1>
+        <main className="fixed inset-0 h-screen w-screen px-4 pb-16 pt-24 sm:pt-28 bg-slate-50/50 overflow-y-auto z-0">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-glass backdrop-blur-xl sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Hệ thống quản trị dữ liệu</p>
+                  <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">Đồng bộ Kho lưu trữ đám mây Supabase</h1>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+                  <Sparkles className="h-4 w-4 text-sky-600 animate-spin" style={{ animationDuration: '3s' }} />
+                  {loading ? "Đang xử lý cổng..." : "Hệ thống trực tuyến"}
+                </div>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-                <Sparkles className="h-4 w-4 text-sky-600" />
-                {loading ? "Đang đồng bộ" : "Sẵn sàng chỉnh sửa"}
-              </div>
-            </div>
 
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">{message}</p>
+              <p className="mt-4 text-sm font-medium text-sky-700 bg-sky-50/60 rounded-xl px-4 py-2.5 border border-sky-100">{message}</p>
 
-            <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-                <div className="flex items-center gap-2 text-slate-950">
-                  <ImageIcon className="h-5 w-5 text-sky-600" />
-                  <h2 className="text-lg font-bold">Thông tin hồ sơ</h2>
+              <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/50 p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-slate-950 border-b border-slate-200 pb-3">
+                    <ImageIcon className="h-5 w-5 text-sky-600" />
+                    <h2 className="text-lg font-bold">Cấu hình thông tin thực thể</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Field label="Họ và tên">
+                      <input value={profile.full_name} onChange={(event) => setProfile({ ...profile, full_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                    </Field>
+                    <Field label="Mã số sinh viên">
+                      <input value={profile.student_id} onChange={(event) => setProfile({ ...profile, student_id: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                    </Field>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Lớp hành chính">
+                        <input value={profile.class_name} onChange={(event) => setProfile({ ...profile, class_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                      </Field>
+                      <Field label="Học phần">
+                        <input value={profile.course_name} onChange={(event) => setProfile({ ...profile, course_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                      </Field>
+                    </div>
+                    <Field label="Mục tiêu Portfolio (Giới thiệu ngắn)">
+                      <textarea rows={4} value={profile.intro_text} onChange={(event) => setProfile({ ...profile, intro_text: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                    </Field>
+
+                    <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                      <Field label="Ảnh chân dung dọc">
+                        <input type="file" accept="image/*" onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)} className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-950 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-800" />
+                      </Field>
+                      <Field label="Ảnh nền tùy chọn">
+                        <input type="file" accept="image/*" onChange={(event) => setBackgroundFile(event.target.files?.[0] ?? null)} className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-950 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-800" />
+                      </Field>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-4 space-y-4">
-                  <Field label="Họ và tên">
-                    <input value={profile.full_name} onChange={(event) => setProfile({ ...profile, full_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-sky-400" />
-                  </Field>
-                  <Field label="Mã số sinh viên">
-                    <input value={profile.student_id} onChange={(event) => setProfile({ ...profile, student_id: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-sky-400" />
-                  </Field>
-                  <Field label="Lớp hành chính">
-                    <input value={profile.class_name} onChange={(event) => setProfile({ ...profile, class_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-sky-400" />
-                  </Field>
-                  <Field label="Học phần">
-                    <input value={profile.course_name} onChange={(event) => setProfile({ ...profile, course_name: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-sky-400" />
-                  </Field>
-                  <Field label="Giới thiệu ngắn">
-                    <textarea rows={5} value={profile.intro_text} onChange={(event) => setProfile({ ...profile, intro_text: event.target.value })} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-sky-400" />
-                  </Field>
+                <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/50 p-5 space-y-4">
+                  <div className="flex items-center gap-2 text-slate-950 border-b border-slate-200 pb-3">
+                    <FileDown className="h-5 w-5 text-emerald-600" />
+                    <h2 className="text-lg font-bold">Danh sách tập tin báo cáo (7 Tuần)</h2>
+                  </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Ảnh chân dung dọc">
-                      <input type="file" accept="image/*" onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)} className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-950 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800" />
-                    </Field>
-                    <Field label="Ảnh nền tùy chọn">
-                      <input type="file" accept="image/*" onChange={(event) => setBackgroundFile(event.target.files?.[0] ?? null)} className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-950 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800" />
-                    </Field>
+                  <div className="space-y-4 max-h-[580px] overflow-y-auto pr-1">
+                    {assignments.map((item, index) => (
+                      <div key={item.week_number} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 transition-all hover:border-slate-300">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-slate-950">Tuần số {item.week_number}</h3>
+                          <span className="text-xs font-mono font-bold text-slate-400">ID_WK_0{item.week_number}</span>
+                        </div>
+                        <input value={item.title} onChange={(event) => setAssignments((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, title: event.target.value } : row))} placeholder="Tiêu đề báo cáo tuần..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
+                        <textarea rows={2} value={item.description} onChange={(event) => setAssignments((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, description: event.target.value } : row))} placeholder="Tóm tắt nội dung cốt lõi..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
+                        
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 mt-2">
+                          <input type="file" accept="application/pdf" onChange={(event) => setAssignmentFiles((current) => ({ ...current, [item.week_number]: event.target.files?.[0] ?? null }))} className="block text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200" />
+                          {item.pdf_url && (
+                            <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 hover:text-sky-900 transition-colors">
+                              <ArrowUpRight className="h-3 w-3" />
+                              Xem PDF hiện tại
+                            </a>
+                          )}
+                        </div>
+                        {assignmentFiles[item.week_number] && (
+                          <p className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md inline-block">
+                            Tệp mới chuẩn bị nạp: {assignmentFiles[item.week_number]?.name}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-                <div className="flex items-center gap-2 text-slate-950">
-                  <FileDown className="h-5 w-5 text-emerald-600" />
-                  <h2 className="text-lg font-bold">7 bài tập</h2>
-                </div>
-
-                <div className="mt-4 space-y-4">
-                  {assignments.map((item, index) => (
-                    <div key={item.week_number} className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-sm font-bold text-slate-950">Tuần {item.week_number}</h3>
-                        <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">#{item.week_number}</span>
-                      </div>
-                      <div className="mt-3 space-y-3">
-                        <input value={item.title} onChange={(event) => setAssignments((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, title: event.target.value } : row))} placeholder="Tiêu đề bài tập" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
-                        <textarea rows={3} value={item.description} onChange={(event) => setAssignments((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, description: event.target.value } : row))} placeholder="Mô tả ngắn" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
-                        <input type="file" accept="application/pdf" onChange={(event) => setAssignmentFiles((current) => ({ ...current, [item.week_number]: event.target.files?.[0] ?? null }))} className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-950 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800" />
-                        {assignmentFiles[item.week_number] ? (
-                          <p className="text-xs font-medium text-sky-700">
-                            File đã chọn: {assignmentFiles[item.week_number]?.name}
-                          </p>
-                        ) : null}
-                        {item.pdf_url ? (
-                          <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-sky-700 hover:text-sky-900">
-                            <ArrowUpRight className="h-4 w-4" />
-                            Xem PDF đã lưu
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
+                <button onClick={handleSaveAll} disabled={saving || loading} className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-slate-950/10">
+                  <Save className="h-4 w-4" />
+                  {saving ? "Đang đồng bộ..." : "Ghi nhận thay đổi lên Cloud"}
+                </button>
+                <p className="text-xs text-slate-400 font-medium">
+                  Hệ thống ghi nhận vào bucket công khai <span className="font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">portfolio-assets</span>.
+                </p>
               </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={handleSaveAll} disabled={saving || loading} className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
-                <Save className="h-4 w-4" />
-                {saving ? "Đang lưu..." : "Lưu hồ sơ và 7 bài tập"}
-              </button>
-              <p className="flex items-center text-sm text-slate-500">
-                Upload sẽ dùng bucket public <span className="mx-1 font-semibold text-slate-700">portfolio-assets</span>.
-              </p>
-            </div>
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
       )}
     </>
   );
@@ -395,7 +360,7 @@ export default function AdminPage() {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{label}</span>
       {children}
     </label>
   );
